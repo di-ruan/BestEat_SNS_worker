@@ -1,0 +1,7 @@
+build
+target
+*s.properties
+*.class
+facebook.xml
+*.DS_Store
+*FacebookApp.java
