@@ -37,7 +37,7 @@ public class RDSWrapper {
 	
 	public void getRestaurantAndCoupon() {
 		try {
-			String query = "select x.couponId, CustomerConfig.customerId from  (select Coupon.*, R.chinese chinese , "
+			String query = "select x.couponId, x.name, x.description, CustomerConfig.customerId from  (select Coupon.*, R.chinese chinese , "
 					+ "R.colombian colombian, R.indian indian, R.italian italian, R.japanese japanese,"
 					+ "R.mexican mexican, R.latitude latitude, R.longitude longitude, R.restaurantName restaurantName "
 					+ "from Coupon, RestaurantConfig R where timeDeliver < now() and timeEnd > now() "
@@ -48,19 +48,33 @@ public class RDSWrapper {
 					+	"(x.italian = 'yes' and  CustomerConfig.italian = 'yes') or "
 					+	"(x.japanese = 'yes' and  CustomerConfig.japanese = 'yes') or "
 					+	"(x.mexican = 'yes' and  CustomerConfig.mexican = 'yes') "
-					+	") and CustomerConfig.customerId = CustomerInfo.customerId and x.couponId not in ( "
-					+	"select couponId from CustomerCoupon)";
+					+	") and CustomerConfig.customerId = CustomerInfo.customerId and "
+					+ 	"CONCAT(x.couponId, '-', CustomerInfo.customerId) not in (select concat(couponId, '-', CustomerCoupon.customerId) from CustomerCoupon)";
 			System.out.println(query);
 			ResultSet resultSet2 = statement.executeQuery(query);	
 			while(resultSet2.next()) {
 				int couponId = resultSet2.getInt("x.couponId");
 				int customerId = resultSet2.getInt("CustomerConfig.customerId");
+				String name = resultSet2.getString("x.name");
+				String description = resultSet2.getString("x.description");
+				int id = -1;
 				String query2 = "Insert into CustomerCoupon "
 						+ "(couponId, customerId) values ('" 
 						+ couponId + "','" + customerId + "')";
 				Statement statement2 = connect.createStatement();
 				statement2.executeUpdate(query2);
-				SNSWrapper.sendMessage(Integer.toString(customerId));
+				String query3 = "Select id From CustomerCoupon Where couponId = " + couponId;
+				ResultSet result2 = statement2.executeQuery(query3);
+				if(result2.next()) {
+					id = result2.getInt("id");
+				}
+				Notification notification = new Notification();
+				notification.customerId = customerId;
+				notification.data.title = name;
+				notification.data.message = description;
+				notification.data.id = id;
+				SNSWrapper.sendMessage(notification.getJSONString());
+				System.out.println(notification.getJSONString());
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
