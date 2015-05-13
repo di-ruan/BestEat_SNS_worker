@@ -8,7 +8,7 @@ import com.amazonaws.services.sns.model.PublishRequest;
 
 public class SNSWrapper {
 	private static AmazonSNSClient amazonSNSClient = null;
-	private static String TopicArn = "arn:aws:sns:us-west-2:146409140165:SentimentTweet";
+	private static String TopicArn = "arn:aws:sns:us-west-2:146409140165:Coupon";
 
 	private static void createSNS() {
 		AWSCredentials credentials = null;
@@ -23,12 +23,12 @@ public class SNSWrapper {
 		}
 	}
 	
-	public static void sendMessage(String id) {
+	public static void sendMessage(String msg) {
 		if(amazonSNSClient == null) {
 			createSNS();
 		}
 		try {
-			PublishRequest publishReq = new PublishRequest().withTopicArn(TopicArn).withMessage(id);
+			PublishRequest publishReq = new PublishRequest().withTopicArn(TopicArn).withMessage(msg);
 			amazonSNSClient.publish(publishReq);
 		} catch (Exception e) {
 			e.printStackTrace();
