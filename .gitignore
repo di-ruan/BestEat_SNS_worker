@@ -4,4 +4,3 @@ target
 *.class
 facebook.xml
 *.DS_Store
-*FacebookApp.java
